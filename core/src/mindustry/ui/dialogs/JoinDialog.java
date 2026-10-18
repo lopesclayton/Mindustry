@@ -141,13 +141,18 @@ public class JoinDialog extends BaseDialog{
     }
 
     void refreshAll(){
-        refreshes ++;
+        approveRefresh(() -> {
+            refreshes ++;
+            refreshLocalApproved();
+            refreshRemoteApproved();
+            if(Core.settings.getBool("communityservers", true)) refreshCommunityApproved();
+        });
+    }
 
-        refreshLocal();
-        refreshRemote();
-        if(Core.settings.getBool("communityservers", true)){
-            refreshCommunity();
-        }
+    private void approveRefresh(Runnable action){
+        platform.withParentalApproval(() -> {
+            if(!android || isShown()) action.run();
+        });
     }
 
     void setupRemote(){
@@ -226,21 +231,34 @@ public class JoinDialog extends BaseDialog{
         saveServers();
         setupRemote();
         for(Server other : servers){
-            if(other.lastHost != null){
-                setupServer(other, other.lastHost);
-            }else{
-                refreshServer(other);
-            }
+            if(other.lastHost != null) setupServer(other, other.lastHost);
+        }
+        if(servers.contains(other -> other.lastHost == null)){
+            approveRefresh(() -> {
+                for(Server other : servers){
+                    if(other.lastHost == null) refreshServerApproved(other);
+                }
+            });
         }
     }
 
     void refreshRemote(){
+        approveRefresh(this::refreshRemoteApproved);
+    }
+
+    private void refreshRemoteApproved(){
         for(Server server : servers){
-            refreshServer(server);
+            refreshServerApproved(server);
         }
     }
 
     void refreshServer(Server server){
+        approveRefresh(() -> {
+            if(servers.contains(server, true)) refreshServerApproved(server);
+        });
+    }
+
+    private void refreshServerApproved(Server server){
         server.content.clear();
 
         server.content.background(Tex.whitePane).setColor(Pal.gray);
@@ -401,6 +419,10 @@ public class JoinDialog extends BaseDialog{
     }
 
     void refreshLocal(){
+        approveRefresh(this::refreshLocalApproved);
+    }
+
+    private void refreshLocalApproved(){
         totalHosts = 0;
 
         local.clear();
@@ -410,13 +432,17 @@ public class JoinDialog extends BaseDialog{
     }
 
     void refreshCommunity(){
+        approveRefresh(this::refreshCommunityApproved);
+    }
+
+    private void refreshCommunityApproved(){
         int cur = refreshes;
 
         global.clear();
         global.background(null);
 
         if(!fetchedServers){
-            fetchServers();
+            fetchApprovedServers();
         }
 
         //if the servers have been fetched, use the fetched list

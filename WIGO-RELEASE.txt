@@ -30,12 +30,16 @@ Implemented in this source snapshot:
   before showing connection progress or initiating network operations. Reconnection
   captures the requested endpoint and its approved retry does not prompt twice.
 - PvP map auto-host requests approval and rechecks the map/game state afterward.
+- Server-list refreshes, LAN discovery and individual server pings request approval.
+  One list refresh batches local/remote/community work under one authorization;
+  joining/hosting still require their own approval. Closed Android dialogs discard
+  pending refresh work. Reordering cached server entries needs no network approval.
 
 Policy: https://s3.sa-east-1.amazonaws.com/lupper.com.br/politica-privacidade-jogos.html
 Contact: contato@lupper.com.br
 
 NOT READY FOR PRODUCTION:
-LAN discovery, server-list pings, mod discovery,
+Mod discovery,
 download/import/reload/execution and other entrypoints need further protection.
 Final launcher/game identity and store assets are not finished. Device runtime,
 rendered layout, accessibility, gameplay and lifecycle tests remain pending.
