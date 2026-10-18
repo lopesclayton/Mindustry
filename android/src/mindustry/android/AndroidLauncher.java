@@ -73,6 +73,13 @@ public class AndroidLauncher extends AndroidApplication{
         initialize(new ClientLauncher(){
 
             @Override
+            public void withParentalApproval(Runnable action){
+                runOnUiThread(() -> requestParentalAction(() -> Core.app.post(() -> {
+                    if(!isFinishing() && !isDestroyed()) action.run();
+                })));
+            }
+
+            @Override
             public void hide(){
                 moveTaskToBack(true);
             }

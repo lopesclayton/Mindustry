@@ -696,10 +696,17 @@ public class JoinDialog extends BaseDialog{
             Core.settings.remove("server-list");
         }
 
-        fetchServers();
+        // Android must not fetch community data or prompt for credentials at startup.
+        // The existing visible refresh/settings actions request it explicitly.
+        if(!android) fetchServers();
     }
 
     public static void fetchServers(){
+        if(!Core.settings.getBool("communityservers", true)) return;
+        platform.withParentalApproval(JoinDialog::fetchApprovedServers);
+    }
+
+    private static void fetchApprovedServers(){
         var urls = Version.type.equals("bleeding-edge") || Vars.forceBeServers ? serverJsonBeURLs : serverJsonURLs;
 
         if(Core.settings.getBool("communityservers", true)){

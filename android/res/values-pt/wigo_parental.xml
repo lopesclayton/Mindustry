@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="wigo_parental_title">Verificação do responsável</string>
-    <string name="wigo_parental_message">Peça ao responsável para desbloquear o aparelho e continuar com este link externo ou convite de servidor.</string>
-    <string name="wigo_parental_unavailable">Links externos e convites de servidor exigem um bloqueio de tela seguro do Android controlado pelo responsável.</string>
+    <string name="wigo_parental_message">Peça ao responsável para desbloquear o aparelho e continuar com esta ação online protegida.</string>
+    <string name="wigo_parental_unavailable">Esta ação exige um bloqueio de tela seguro do Android controlado pelo responsável.</string>
     <string name="wigo_link_unavailable">Nenhum aplicativo disponível para abrir este link.</string>
 </resources>

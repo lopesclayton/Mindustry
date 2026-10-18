@@ -16,6 +16,12 @@ import java.net.*;
 
 public interface Platform{
 
+    /** Runs one protected action. Android implementations must obtain device credentials. */
+    default void withParentalApproval(Runnable action){
+        // Preserve other platforms; an Android implementation without a gate denies.
+        if(!mindustry.Vars.android) action.run();
+    }
+
     /** Dynamically creates a class loader for a jar file. This loader must be child-first. */
     default ClassLoader loadJar(Fi jar, ClassLoader parent) throws Exception{
         return new URLClassLoader(new URL[]{jar.file().toURI().toURL()}, parent){
