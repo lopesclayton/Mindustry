@@ -8,6 +8,8 @@ import android.net.*;
 import android.os.*;
 import android.os.Build.*;
 import android.telephony.*;
+import android.widget.Toast;
+import io.anuke.mindustry.R;
 import arc.*;
 import arc.backend.android.*;
 import arc.files.*;
@@ -33,6 +35,10 @@ public class AndroidLauncher extends AndroidApplication{
     boolean doubleScaleTablets = true;
     FileChooserDialog chooser;
     Runnable permCallback;
+    private static final String WIGO_PRIVACY_URL = "https://s3.sa-east-1.amazonaws.com/lupper.com.br/politica-privacidade-jogos.html";
+    private int parentalRequestCode = -1;
+    private Runnable pendingParentalAction;
+    private boolean parentalStateSaved;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -51,6 +57,15 @@ public class AndroidLauncher extends AndroidApplication{
         });
 
         super.onCreate(savedInstanceState);
+        // Register once, using Arc's request-code allocator to avoid file-picker collisions.
+        // No action or authorization is restored from the saved instance state.
+        addResultListener(code -> parentalRequestCode = code, (result, data) -> {
+            Runnable action = pendingParentalAction;
+            pendingParentalAction = null;
+            if(result == Activity.RESULT_OK && action != null && !isFinishing() && !isDestroyed()){
+                action.run();
+            }
+        });
         if(doubleScaleTablets && isTablet(this)){
             Scl.setAddition(0.5f);
         }
@@ -265,6 +280,69 @@ public class AndroidLauncher extends AndroidApplication{
         }
     }
 
+    /** All Arc external-link calls on Android pass through this one-use gate. */
+    @Override
+    public boolean openURI(String uri){
+        if(uri == null || uri.isEmpty()) return false;
+        runOnUiThread(() -> {
+            if(isFinishing() || isDestroyed() || parentalStateSaved) return;
+            Runnable open = () -> {
+                if(!AndroidLauncher.super.openURI(uri)){
+                    Toast.makeText(this, R.string.wigo_link_unavailable, Toast.LENGTH_LONG).show();
+                }
+            };
+            if(WIGO_PRIVACY_URL.equals(uri)){
+                open.run();
+            }else{
+                requestParentalAction(open);
+            }
+        });
+        // Handled asynchronously; false would trigger upstream clipboard fallback.
+        return true;
+    }
+
+    private void requestParentalAction(Runnable action){
+        if(pendingParentalAction != null || parentalStateSaved || isFinishing() || isDestroyed()) return;
+        KeyguardManager keyguard = (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
+        if(VERSION.SDK_INT < VERSION_CODES.M || parentalRequestCode < 0 || keyguard == null || !keyguard.isDeviceSecure()){
+            Toast.makeText(this, R.string.wigo_parental_unavailable, Toast.LENGTH_LONG).show();
+            return;
+        }
+        Intent confirmation = keyguard.createConfirmDeviceCredentialIntent(
+            getString(R.string.wigo_parental_title), getString(R.string.wigo_parental_message));
+        if(confirmation == null){
+            Toast.makeText(this, R.string.wigo_parental_unavailable, Toast.LENGTH_LONG).show();
+            return;
+        }
+        pendingParentalAction = action;
+        try{
+            startActivityForResult(confirmation, parentalRequestCode);
+        }catch(ActivityNotFoundException | SecurityException unavailable){
+            pendingParentalAction = null;
+            Toast.makeText(this, R.string.wigo_parental_unavailable, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle state){
+        parentalStateSaved = true;
+        // Credential UI normally stops this activity. Keep the one pending action
+        // in this instance only; never put it in state. A recreated instance denies.
+        super.onSaveInstanceState(state);
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        parentalStateSaved = false;
+    }
+
+    @Override
+    protected void onDestroy(){
+        pendingParentalAction = null;
+        super.onDestroy();
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
         if(requestCode == PERMISSION_REQUEST_CODE){
@@ -307,9 +385,9 @@ public class AndroidLauncher extends AndroidApplication{
                     int port = uri.getPort();
 
                     if(host != null && !host.isEmpty()){
-                        Core.app.post(() -> {
+                        runOnUiThread(() -> requestParentalAction(() -> Core.app.post(() -> {
                             ui.showConfirm(Core.bundle.format("servers.connect.confirm", host), () -> ui.join.connect(host, port != -1 ? port : 6567));
-                        });
+                        })));
                     }
                 }else{ //open a save file
                     Fi file = Core.files.cache("imported");

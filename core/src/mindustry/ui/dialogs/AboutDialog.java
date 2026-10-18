@@ -40,6 +40,19 @@ public class AboutDialog extends BaseDialog{
         Table in = new Table();
         ScrollPane pane = new ScrollPane(in);
 
+        // Wigo adaptation details precede, but do not replace, upstream credits.
+        in.table(Styles.grayPanel, wigo -> {
+            wigo.margin(16f);
+            wigo.add("Wigo Tecnologia").color(Pal.accent).growX().left().row();
+            wigo.labelWrap(Core.bundle.get("wigo.about.independent")).width(w - 32f).padTop(8f).row();
+            wigo.button("@wigo.about.privacy", () -> Core.app.openURI(
+                "https://s3.sa-east-1.amazonaws.com/lupper.com.br/politica-privacidade-jogos.html"))
+                .growX().height(64f).padTop(16f).row();
+            wigo.button("@wigo.about.source", () -> Core.app.openURI(
+                "https://github.com/lopesclayton/Mindustry"))
+                .growX().height(64f).padTop(8f).row();
+        }).width(w).padBottom(16f).row();
+
         for(LinkEntry link : Links.getLinks()){
             if((ios || steam) && bannedItems.contains(link.name)){
                 continue;

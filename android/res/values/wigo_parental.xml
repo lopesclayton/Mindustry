@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wigo_parental_title">Parent or guardian verification</string>
+    <string name="wigo_parental_message">Ask your parent or guardian to unlock the device to continue with this external link or server invitation.</string>
+    <string name="wigo_parental_unavailable">External links and server invitations require a secure Android screen lock controlled by your parent or guardian.</string>
+    <string name="wigo_link_unavailable">No app is available to open this link.</string>
+</resources>

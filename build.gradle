@@ -21,6 +21,8 @@ buildscript{
     }
 
     dependencies{
+        // Keep AGP visible to the root-loaded Kotlin Android plugin.
+        classpath 'com.android.tools.build:gradle:8.13.0'
         classpath arcModule(":extensions:packer")
         classpath arcModule(":arc-core")
     }

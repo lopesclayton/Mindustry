@@ -1,0 +1,33 @@
+Wigo Tecnologia - independent Mindustry Android adaptation (work in progress)
+Modified source: https://github.com/lopesclayton/Mindustry
+Original project: https://github.com/Anuken/Mindustry
+Original credits and GPL license are preserved. Not an official Anuken release.
+
+Android package: com.wigotecnologia.game.mindustry
+JDK21, compile/target SDK36, included Gradle wrapper, AGP8.13.0.
+Compile check: gradlew.bat :android:compileReleaseJavaWithJavac
+Bundle build: gradlew.bat :android:bundleRelease
+Output: android/build/outputs/bundle/release/android-release.aab
+No signing credentials are distributed. No AdMob integration is included.
+
+Implemented in this source snapshot:
+- Wigo application ID and Android/Kotlin build plugin compatibility.
+- Removed redundant compileOnly android.jar (AGP supplies the boot classpath).
+- External Arc links require a one-use Android device credential confirmation.
+- Exact privacy URL below remains accessible without device authentication.
+- Incoming mindustry:// server invitations require the same confirmation before
+  the original in-game join confirmation. Callback returns to the game thread.
+- Requests do not persist authorization; no lock, cancellation or recreation
+  denies the requested action. Runtime validation is still required.
+- About contains independent-adaptation text, policy and modified-source links
+  in English and Brazilian Portuguese. Upstream credits remain intact.
+
+Policy: https://s3.sa-east-1.amazonaws.com/lupper.com.br/politica-privacidade-jogos.html
+Contact: contato@lupper.com.br
+
+NOT READY FOR PRODUCTION:
+Automatic server-list requests, in-game multiplayer/hosting, mod discovery,
+download/import/reload/execution and other entrypoints need further protection.
+Final launcher/game identity and store assets are not finished. Device runtime,
+rendered layout, accessibility, gameplay and lifecycle tests remain pending.
+No signed final AAB or Play submission is represented by this source snapshot.
