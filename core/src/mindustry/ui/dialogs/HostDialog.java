@@ -86,6 +86,10 @@ public class HostDialog extends BaseDialog{
     }
 
     public void runHost(){
+        platform.withParentalApproval(this::runHostApproved);
+    }
+
+    private void runHostApproved(){
         ui.loadfrag.show("@hosting");
         Time.runTask(5f, () -> {
             try{

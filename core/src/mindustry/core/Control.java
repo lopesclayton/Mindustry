@@ -148,13 +148,18 @@ public class Control implements ApplicationListener, Loadable{
         //autohost for pvp maps
         Events.on(WorldLoadEvent.class, event -> app.post(() -> {
             if(state.rules.pvp && !net.active() && !state.rules.pauseDisabled && !state.isEditor() && !ui.editor.isShown()){
-                try{
-                    net.host(port);
-                    player.admin = true;
-                }catch(IOException e){
-                    ui.showException("@server.error", e);
-                    state.set(State.menu);
-                }
+                var requestedRules = state.rules;
+                platform.withParentalApproval(() -> {
+                    if(state.rules != requestedRules || (android && state.isMenu()) || !state.rules.pvp || net.active()
+                        || state.rules.pauseDisabled || state.isEditor() || ui.editor.isShown()) return;
+                    try{
+                        net.host(port);
+                        player.admin = true;
+                    }catch(IOException e){
+                        ui.showException("@server.error", e);
+                        state.set(State.menu);
+                    }
+                });
             }
         }));
 

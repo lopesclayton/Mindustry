@@ -624,6 +624,10 @@ public class JoinDialog extends BaseDialog{
     }
 
     public void connect(String ip, int port){
+        platform.withParentalApproval(() -> connectApproved(ip, port));
+    }
+
+    private void connectApproved(String ip, int port){
         if(player.name.trim().isEmpty()){
             ui.showInfo("@noname");
             return;
@@ -653,14 +657,21 @@ public class JoinDialog extends BaseDialog{
 
     public void reconnect(){
         if(lastIp == null || lastIp.isEmpty()) return;
+        String ip = lastIp;
+        int port = lastPort;
+        platform.withParentalApproval(() -> reconnectApproved(ip, port));
+    }
+
+    private void reconnectApproved(String ip, int port){
         ui.loadfrag.show("@reconnecting");
 
         ping = Timer.schedule(() -> {
-            net.pingHost(lastIp, lastPort, host -> {
+            net.pingHost(ip, port, host -> {
                 if(ping == null) return;
                 ping.cancel();
                 ping = null;
-                connect(lastIp, lastPort);
+                // This retry is part of the one approved reconnection request.
+                connectApproved(ip, port);
             }, exception -> {});
         }, 1, 1);
 

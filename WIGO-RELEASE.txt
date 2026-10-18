@@ -16,7 +16,8 @@ Implemented in this source snapshot:
 - External Arc links require a one-use Android device credential confirmation.
 - Exact privacy URL below remains accessible without device authentication.
 - Incoming mindustry:// server invitations require the same confirmation before
-  the original in-game join confirmation. Callback returns to the game thread.
+  connecting, via JoinDialog.connect after the original in-game join confirmation.
+  Callback returns to the game thread; the entry does not request credentials twice.
 - Requests do not persist authorization; no lock, cancellation or recreation
   denies the requested action. Runtime validation is still required.
 - About contains independent-adaptation text, policy and modified-source links
@@ -25,12 +26,16 @@ Implemented in this source snapshot:
   User-triggered community-list fetches (including settings) require device
   credentials through Platform.withParentalApproval. Approved work is posted to
   the game thread; the default platform method denies unimplemented Android calls.
+- JoinDialog connect/reconnect and HostDialog hosting request one-use approval
+  before showing connection progress or initiating network operations. Reconnection
+  captures the requested endpoint and its approved retry does not prompt twice.
+- PvP map auto-host requests approval and rechecks the map/game state afterward.
 
 Policy: https://s3.sa-east-1.amazonaws.com/lupper.com.br/politica-privacidade-jogos.html
 Contact: contato@lupper.com.br
 
 NOT READY FOR PRODUCTION:
-LAN discovery, server pings, in-game multiplayer/hosting, mod discovery,
+LAN discovery, server-list pings, mod discovery,
 download/import/reload/execution and other entrypoints need further protection.
 Final launcher/game identity and store assets are not finished. Device runtime,
 rendered layout, accessibility, gameplay and lifecycle tests remain pending.

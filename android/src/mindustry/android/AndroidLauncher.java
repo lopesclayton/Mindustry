@@ -392,9 +392,10 @@ public class AndroidLauncher extends AndroidApplication{
                     int port = uri.getPort();
 
                     if(host != null && !host.isEmpty()){
-                        runOnUiThread(() -> requestParentalAction(() -> Core.app.post(() -> {
+                        // JoinDialog.connect owns device approval for every entry point.
+                        Core.app.post(() -> {
                             ui.showConfirm(Core.bundle.format("servers.connect.confirm", host), () -> ui.join.connect(host, port != -1 ? port : 6567));
-                        })));
+                        });
                     }
                 }else{ //open a save file
                     Fi file = Core.files.cache("imported");
