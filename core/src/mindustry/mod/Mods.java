@@ -492,6 +492,7 @@ public class Mods implements Loadable{
     }
 
     public Scripts getScripts(){
+        if(android) throw new IllegalStateException("Android: external scripts are not supported.");
         if(scripts == null) scripts = platform.createScripts();
         return scripts;
     }
@@ -801,7 +802,7 @@ public class Mods implements Loadable{
 
     /** This must be run on the main thread! */
     public void loadScripts(){
-        if(skipModCode) return;
+        if(android || skipModCode) return;
 
         try{
             eachEnabled(mod -> {
@@ -1109,7 +1110,12 @@ public class Mods implements Loadable{
         ZipFi rootZip = null;
 
         try{
-            Fi zip = resolveRoot(sourceFile.isDirectory() ? sourceFile : (rootZip = new ZipFi(sourceFile)));
+            if(!sourceFile.isDirectory()) WigoModPolicy.validate(sourceFile, android, false);
+            Fi archive = sourceFile.isDirectory() ? sourceFile : (rootZip = new ZipFi(sourceFile));
+            // Inspect the complete archive, including entries outside a wrapper folder,
+            // before overwriting an existing mod or loading any code.
+            WigoModPolicy.validate(archive, android, false);
+            Fi zip = resolveRoot(archive);
 
             ModMeta meta = findMeta(zip);
 
@@ -1117,6 +1123,8 @@ public class Mods implements Loadable{
                 Log.warn("Mod @ doesn't have a '[mod/plugin].[h]json' file, skipping.", zip);
                 throw new ModLoadException("Invalid file: No mod.json found.");
             }
+
+            WigoModPolicy.validate(zip, android, meta.java);
 
             String camelized = meta.name.replace(" ", "");
             String mainClass = meta.main == null ? camelized.toLowerCase(Locale.ROOT) + "." + camelized + "Mod" : meta.main;

@@ -95,6 +95,7 @@ public class AndroidLauncher extends AndroidApplication{
 
             @Override
             public ClassLoader loadJar(Fi jar, ClassLoader parent) throws Exception{
+                if(Vars.android) throw new UnsupportedOperationException("Android: executable mods are not supported.");
                 //Required to load jar files in Android 14: https://developer.android.com/about/versions/14/behavior-changes-14#safer-dynamic-code-loading
                 try{
                     jar.file().setReadOnly();

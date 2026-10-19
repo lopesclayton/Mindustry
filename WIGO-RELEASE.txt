@@ -39,8 +39,14 @@ Policy: https://s3.sa-east-1.amazonaws.com/lupper.com.br/politica-privacidade-jo
 Contact: contato@lupper.com.br
 
 NOT READY FOR PRODUCTION:
-Mod discovery,
-download/import/reload/execution and other entrypoints need further protection.
+Android mod imports and startup now reject Java metadata, executable/archive
+payloads (.jar/.dex/.class/native libraries) and scripts, including wrapped ZIPs.
+Data-only mods remain supported. Rejection does not delete existing mod files.
+Java release downloads are blocked before requesting release assets. Script
+execution and Android platform JAR loading have additional fail-closed guards.
+The Android scripting console cannot execute external scripts either.
+Desktop behavior is unchanged. These restrictions were explicitly authorized.
+Mod discovery/network parental entrypoints still need final integration review.
 Final launcher/game identity and store assets are not finished. Device runtime,
 rendered layout, accessibility, gameplay and lifecycle tests remain pending.
 No signed final AAB or Play submission is represented by this source snapshot.

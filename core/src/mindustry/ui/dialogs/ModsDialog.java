@@ -651,6 +651,10 @@ public class ModsDialog extends BaseDialog{
     }
 
     public void githubImportJavaMod(String repo, @Nullable String release, boolean forceEnable){
+        if(android){
+            importFail(new IllegalArgumentException("Android: Java mods are not supported; use data-only mods."));
+            return;
+        }
         //grab latest release
         Http.get(ghApi + "/repos/" + repo + "/releases/" + (release == null ? "latest" : release), res -> {
             if(cancelledImport) return;
