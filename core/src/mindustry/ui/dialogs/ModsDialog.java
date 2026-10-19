@@ -103,6 +103,7 @@ public class ModsDialog extends BaseDialog{
             }
         }
 
+        if(repoToMod.isEmpty()) return;
         browser.getModList(list -> {
             withUpdates.clear();
             for(var entry : list){
@@ -336,7 +337,8 @@ public class ModsDialog extends BaseDialog{
                     b.image(Icon.download).size(iconMed).padRight(8f);
                     b.add("@mods.update.all");
                     b.image(Icon.download).size(iconMed).padLeft(8f);
-                }, Styles.grayt, () -> {
+                }, Styles.grayt, () -> platform.withParentalApproval(() -> {
+                    if(android && !isShown()) return;
                     var queue = withUpdates.toSeq();
 
                     int[] index = {0};
@@ -353,11 +355,11 @@ public class ModsDialog extends BaseDialog{
                         }else if(!ui.loadfrag.shown()){ //loading not shown, queue next one
                             var next = queue.get(index[0] ++);
 
-                            githubImportMod(next.getRepo(), next.isJava(), null, false);
+                            githubImportModApproved(next.getRepo(), next.isJava(), null, false);
                         }
                     });
                     addChild(updaterElement);
-                }).padTop(8f).width(w).height(60f).padTop(12f).row();
+                })).padTop(8f).width(w).height(60f).padTop(12f).row();
             }
         }else{
             cont.table(Styles.black6, t -> t.add("@mods.none")).height(80f);
@@ -542,6 +544,10 @@ public class ModsDialog extends BaseDialog{
     }
 
     public void viewReleases(String repo, boolean isJava, boolean reinstall){
+        platform.withParentalApproval(() -> viewReleasesApproved(repo, isJava, reinstall));
+    }
+
+    private void viewReleasesApproved(String repo, boolean isJava, boolean reinstall){
         BaseDialog load = new BaseDialog("");
         load.cont.add("[accent]" + Core.bundle.get("mods.browser.fetching"));
         load.show();
@@ -621,6 +627,11 @@ public class ModsDialog extends BaseDialog{
     }
 
     public void githubImportMod(String repo, boolean isJava, @Nullable String release, boolean forceEnable){
+        platform.withParentalApproval(() -> githubImportModApproved(repo, isJava, release, forceEnable));
+    }
+
+    // Package-private: dependency batches share one explicit approval for that batch.
+    void githubImportModApproved(String repo, boolean isJava, @Nullable String release, boolean forceEnable){
         modImportProgress = 0f;
         cancelledImport = false;
         ui.loadfrag.show(Core.bundle.format("mods.downloading", repo));
@@ -644,7 +655,7 @@ public class ModsDialog extends BaseDialog{
                 if(language.equals("Java") || language.equals("Kotlin") || language.equals("Groovy") || language.equals("Scala")){
                     githubImportJavaMod(repo, release, forceEnable);
                 }else{
-                    githubImportBranch(mainBranch, repo, release, forceEnable);
+                    githubImportBranchApproved(mainBranch, repo, release, forceEnable);
                 }
             }, this::importFail);
         }
@@ -680,6 +691,10 @@ public class ModsDialog extends BaseDialog{
     }
 
     public void githubImportBranch(String branch, String repo, @Nullable String release, boolean forceEnable){
+        platform.withParentalApproval(() -> githubImportBranchApproved(branch, repo, release, forceEnable));
+    }
+
+    private void githubImportBranchApproved(String branch, String repo, @Nullable String release, boolean forceEnable){
         if(release != null) {
             Http.get(ghApi + "/repos/" + repo + "/releases/" + release, res -> {
                 if(cancelledImport) return;

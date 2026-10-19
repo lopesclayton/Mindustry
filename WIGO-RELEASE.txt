@@ -46,7 +46,14 @@ Java release downloads are blocked before requesting release assets. Script
 execution and Android platform JAR loading have additional fail-closed guards.
 The Android scripting console cannot execute external scripts either.
 Desktop behavior is unchanged. These restrictions were explicitly authorized.
-Mod discovery/network parental entrypoints still need final integration review.
+Catalog browsing, update checks, release lookup and data-mod downloads now require
+device-credential approval. Catalog thumbnails are covered only by the current
+approved viewing session; closing/reopening discards approval and stale callbacks.
+Download/update batches get their own approval, not a persistent unlocked flag.
+Java/script listings are excluded on Android; import-time rejection remains.
+English/Portuguese credential prompts now include an online-safety reminder.
+Focused tests cover browser approval lifecycle, data-only import and platform deny
+defaults. Full Android runtime/integration verification is still required.
 Android launcher label and menu title now use Wigo Indústria, with an original
 blue/white vector factory launcher icon (including adaptive Android icon).
 Original upstream credits/assets remain in source; desktop identity is unchanged.

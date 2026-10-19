@@ -32,6 +32,7 @@ public class ModBrowserDialog extends BaseDialog{
     protected @Nullable Seq<ModListing> modList;
     protected Seq<Cons<Seq<ModListing>>> fetchCallbacks = new Seq<>();
     protected boolean orderDate = true, fetchingMods;
+    private final WigoBrowserApproval browserApproval = new WigoBrowserApproval();
 
     protected ObjectMap<String, TextureRegion> textureCache = new ObjectMap<>();
 
@@ -62,7 +63,18 @@ public class ModBrowserDialog extends BaseDialog{
 
         onResize(this::rebuildBrowser);
 
-        shown(this::rebuildBrowser);
+        shown(() -> {
+            if(!android){
+                rebuildBrowser();
+                return;
+            }
+            long request = browserApproval.begin();
+            browserTable.clear();
+            platform.withParentalApproval(() -> {
+                if(isShown() && browserApproval.approve(request)) rebuildBrowser();
+            });
+        });
+        hidden(browserApproval::close);
     }
 
     public @Nullable ModListing getCachedMod(String repo){
@@ -71,6 +83,10 @@ public class ModBrowserDialog extends BaseDialog{
     }
 
     public void getModList(Cons<Seq<ModListing>> listener){
+        platform.withParentalApproval(() -> getModListApproved(listener));
+    }
+
+    private void getModListApproved(Cons<Seq<ModListing>> listener){
         //mods already fetched, use that
         if(modList != null){
             listener.get(modList);
@@ -85,7 +101,7 @@ public class ModBrowserDialog extends BaseDialog{
         getModListInternal(0);
     }
 
-    protected void getModListInternal(int index){
+    private void getModListInternal(int index){
         if(index >= modJsonURLs.length) return;
 
         //use a custom instance, since this is run in a new thread
@@ -139,11 +155,15 @@ public class ModBrowserDialog extends BaseDialog{
 
 
     public void downloadDependencies(Seq<String> toImport, Cons<Seq<String>> imported){
+        platform.withParentalApproval(() -> downloadDependenciesApproved(toImport, imported));
+    }
+
+    private void downloadDependenciesApproved(Seq<String> toImport, Cons<Seq<String>> imported){
         Seq<String> remaining = toImport.copy();
-        getModList(listings -> {
+        getModListApproved(listings -> {
             listings.each(l -> remaining.contains(l.internalName), l -> {
                 remaining.remove(l.internalName);
-                ui.mods.githubImportMod(l.repo, l.hasJava, true);
+                ui.mods.githubImportModApproved(l.repo, l.hasJava, null, true);
             });
             toImport.removeAll(remaining);
             imported.get(toImport);
@@ -205,6 +225,8 @@ public class ModBrowserDialog extends BaseDialog{
     }
 
     protected void rebuildBrowser(){
+        long approvedView = browserApproval.token();
+        if(android && !browserApproval.permits(approvedView)) return;
         ObjectSet<String> installed = mods.list().map(m -> m.getRepo()).asSet();
 
         browserTable.clear();
@@ -212,7 +234,8 @@ public class ModBrowserDialog extends BaseDialog{
 
         int cols = (int)Math.max(Core.graphics.getWidth() / Scl.scl(480), 1);
 
-        getModList(rlistings -> {
+        getModListApproved(rlistings -> {
+            if(android && !browserApproval.permits(approvedView)) return;
             browserTable.clear();
             int i = 0;
 
@@ -223,7 +246,8 @@ public class ModBrowserDialog extends BaseDialog{
             }
 
             for(ModListing mod : listings){
-                if(((mod.hasJava || mod.hasScripts && !mod.iosCompatible) && Vars.ios) ||
+                if((android && (mod.hasJava || mod.hasScripts)) ||
+                ((mod.hasJava || mod.hasScripts && !mod.iosCompatible) && Vars.ios) ||
                 (!Strings.matches(searchtxt, mod.name) && !Strings.matches(searchtxt, mod.repo))
                 ) continue;
 
@@ -257,6 +281,7 @@ public class ModBrowserDialog extends BaseDialog{
                                     Fi cacheFile = cacheFolder.child(Strings.sanitizeFilename(mod.repo + "_" + mod.iconHash) + ".png");
 
                                     if(!cacheFile.exists()){ //fetch from Github
+                                        if(android && !browserApproval.permits(approvedView)) return;
                                         ConsT<HttpResponse, Exception> fetch = res -> {
                                             byte[] bytes = res.getResult();
                                             Pixmap pix = new Pixmap(bytes);
@@ -278,7 +303,8 @@ public class ModBrowserDialog extends BaseDialog{
                                         Http.get("https://raw.githubusercontent.com/Anuken/MindustryMods/master/icons/" + repoName)
                                         .error(err -> {
                                             //github ratelimited the client, try jsdelivr instead
-                                            if(!(err instanceof HttpStatusException s && s.status == HttpStatus.NOT_FOUND)){
+                                            if((!android || browserApproval.permits(approvedView)) &&
+                                            !(err instanceof HttpStatusException s && s.status == HttpStatus.NOT_FOUND)){
                                                 Http.get("https://cdn.jsdelivr.net/gh/anuken/mindustrymods/icons/" + repoName)
                                                 .error(err2 -> {}) //nothing I can do about it
                                                 .timeout(15_000)

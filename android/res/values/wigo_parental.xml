@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="wigo_parental_title">Parent or guardian verification</string>
-    <string name="wigo_parental_message">Ask your parent or guardian to unlock the device to continue with this protected online action.</string>
+    <string name="wigo_parental_message">Ask your parent or guardian to unlock the device. Online features may include strangers and third-party content. Do not share your full name, address, phone number or other personal information. Use online features with supervision.</string>
     <string name="wigo_parental_unavailable">This action requires a secure Android screen lock controlled by your parent or guardian.</string>
     <string name="wigo_link_unavailable">No app is available to open this link.</string>
 </resources>
