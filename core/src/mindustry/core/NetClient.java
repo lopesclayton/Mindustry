@@ -367,17 +367,14 @@ public class NetClient implements ApplicationListener{
                 return;
             }
 
-            //special case; graphical server needs to see its message
-            if(!headless){
-                sendMessage(netServer.chatFormatter.format(player, message), message, player);
-            }
-
             //server console logging
             Log.info("&fi@: @", "&lc" + player.plainName(), "&lw" + message);
 
-            //invoke event for all clients but also locally
-            //this is required so other clients get the correct name even if they don't know who's sending it yet
-            Call.sendMessage(netServer.chatFormatter.format(player, message), message, player);
+            //Route per recipient so server-owned blocks cover public chat as well
+            //as team/admin messages, which already use Player.sendMessage.
+            String filteredMessage = message;
+            String formatted = netServer.chatFormatter.format(player, message);
+            Groups.player.each(recipient -> recipient.sendMessage(formatted, player, filteredMessage));
         }else{
 
             //a command was sent, now get the output

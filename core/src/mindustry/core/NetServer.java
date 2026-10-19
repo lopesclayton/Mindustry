@@ -54,6 +54,13 @@ public class NetServer implements ApplicationListener{
 
     public Administration admins = new Administration();
     public CommandHandler clientCommands = new CommandHandler("/");
+    public WigoChatBlocks wigoChatBlocks = new WigoChatBlocks(
+        Core.settings.getJson("wigo-chat-blocks-v1", String[].class, () -> new String[0]));
+
+    private void saveWigoChatBlocks(){
+        Core.settings.putJson("wigo-chat-blocks-v1", wigoChatBlocks.snapshot());
+        Core.settings.forceSave();
+    }
     public TeamAssigner assigner = (player, players) -> {
         if(state.rules.pvp){
             //find team with minimum amount of players and auto-assign player to that.
@@ -344,6 +351,33 @@ public class NetServer implements ApplicationListener{
     }
 
     private void registerCommands(){
+        clientCommands.<Player>register("wigo-players", "List online player IDs for communication blocking.", (args, requester) -> {
+            Groups.player.each(target -> requester.sendMessage("#" + target.id + " " + target.plainName()));
+        });
+        clientCommands.<Player>register("wigo-block", "<player-id>", "Block messages from a player on this Wigo server.", (args, requester) -> {
+            Player target = Groups.player.getByID(Strings.parseInt(args[0].replace("#", ""), -1));
+            if(target == null || target == requester || !wigoChatBlocks.block(requester.uuid(), target.uuid())){
+                requester.sendMessage("[scarlet]Cannot block this player (invalid target or block limit reached).");
+                return;
+            }
+            saveWigoChatBlocks();
+            requester.sendMessage("[accent]Player messages blocked on this server. Blocking does not ban the player or erase earlier messages.");
+        });
+        clientCommands.<Player>register("wigo-unblock", "<player-id>", "Unblock messages from an online player.", (args, requester) -> {
+            Player target = Groups.player.getByID(Strings.parseInt(args[0].replace("#", ""), -1));
+            if(target == null){
+                requester.sendMessage("[scarlet]Player not found. Use /wigo-unblock-all to clear your own block list.");
+                return;
+            }
+            wigoChatBlocks.unblock(requester.uuid(), target.uuid());
+            saveWigoChatBlocks();
+            requester.sendMessage("[accent]Player messages unblocked.");
+        });
+        clientCommands.<Player>register("wigo-unblock-all", "Clear your own communication block list.", (args, requester) -> {
+            wigoChatBlocks.clearRecipient(requester.uuid());
+            saveWigoChatBlocks();
+            requester.sendMessage("[accent]Your communication block list was cleared.");
+        });
         clientCommands.<Player>register("help", "[page]", "Lists all commands.", (args, player) -> {
             if(args.length > 0 && !Strings.canParseInt(args[0])){
                 player.sendMessage("[scarlet]'page' must be a number.");

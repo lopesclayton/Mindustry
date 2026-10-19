@@ -468,9 +468,14 @@ abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Dra
     }
 
     void sendMessage(String text, Player from, String unformatted){
+        if(from != null && net.server() && netServer.wigoChatBlocks.blocks(uuid(), from.uuid())) return;
         if(isLocal()){
             if(ui != null){
-                ui.chatfrag.addMessage(text);
+                if(from != null){
+                    mindustry.core.NetClient.sendMessage(text, unformatted, from);
+                }else{
+                    ui.chatfrag.addMessage(text);
+                }
             }
         }else{
             Call.sendMessage(con, text, unformatted, from);
