@@ -1,4 +1,4 @@
-Wigo Tecnologia - independent Mindustry Android adaptation (work in progress)
+Wigo Indústria - independent Mindustry Android adaptation (work in progress)
 Modified source: https://github.com/lopesclayton/Mindustry
 Original project: https://github.com/Anuken/Mindustry
 Original credits and GPL license are preserved. Not an official Anuken release.
@@ -47,6 +47,9 @@ execution and Android platform JAR loading have additional fail-closed guards.
 The Android scripting console cannot execute external scripts either.
 Desktop behavior is unchanged. These restrictions were explicitly authorized.
 Mod discovery/network parental entrypoints still need final integration review.
-Final launcher/game identity and store assets are not finished. Device runtime,
+Android launcher label and menu title now use Wigo Indústria, with an original
+blue/white vector factory launcher icon (including adaptive Android icon).
+Original upstream credits/assets remain in source; desktop identity is unchanged.
+Store feature graphic and screenshots are not finished. Device runtime,
 rendered layout, accessibility, gameplay and lifecycle tests remain pending.
 No signed final AAB or Play submission is represented by this source snapshot.
